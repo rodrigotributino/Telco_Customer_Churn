@@ -1,0 +1,607 @@
+---
+title: "Modelos de classificação"
+output:
+  html_document:
+    df_print: paged
+---
+
+O objeto desse projeto é aplicar alguns modelos de machine learning para predição de possíveis churns de clientes.\n
+
+Vamos utilizar o banco de dados disponível no [kaggle](https://www.kaggle.com/blastchar/telco-customer-churn) 
+
+
+### Carregando pacotes
+
+```{r}
+# Carregando pacotes
+library(tidyverse)
+library(magrittr)
+library(caret)
+```
+
+### Carregando Dataset
+
+```{r}
+df <- read_csv("./Dados/datasets_Telco-Customer-Churn.csv")
+print(head(df))
+```
+
+```{r}
+# Dimensão dos dados
+dim(df)
+```
+
+### Análise Exploratória
+
+```{r}
+# Tipo de variáveis
+str(df)
+
+# alterando caracteres para fatores
+df %<>% 
+  mutate_if(is.character, as.factor) 
+
+# transformando a variável SeniorCitizen para fator
+df %<>% 
+  mutate(SeniorCitizen = as.factor(SeniorCitizen))
+
+str(df)
+```
+
+```{r}
+# Verificando se há valores faltantes no dataset
+df %>% is.na() %>% sum()
+```
+
+```{r}
+# Medidas de tendência central e de variação
+df %>% summary()
+```
+```{r}
+# Distribuição da variável resposta
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = Churn, fill = Churn)) +
+  labs(
+    title = 'Distribuição de Churn',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# Gênero
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = gender, fill = gender)) +
+  labs(
+    title = 'Distribuição de Gênero',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# SeniorCitizen
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = SeniorCitizen, fill = SeniorCitizen)) +
+  labs(
+    title = 'Distribuição de SeniorCitizen',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# Partner
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = Partner, fill = Partner)) +
+  labs(
+    title = 'Distribuição de Partner',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# Dependents
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = Dependents, fill = Dependents)) +
+  labs(
+    title = 'Distribuição de Dependents',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# tenure
+df %>% 
+  ggplot() +
+  geom_histogram(aes(x = tenure), col = 'black', fill = 'lightblue') +
+  labs(
+    title = 'Distribuição de tenure',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# PhoneService
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = PhoneService, fill = PhoneService)) +
+  labs(
+    title = 'Distribuição de PhoneService',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# MultipleLines
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = MultipleLines, fill = MultipleLines)) +
+  labs(
+    title = 'Distribuição de MultipleLines',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# InternetService
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = InternetService, fill = InternetService)) +
+  labs(
+    title = 'Distribuição de InternetService',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# OnlineSecurity
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = OnlineSecurity, fill = OnlineSecurity)) +
+  labs(
+    title = 'Distribuição de OnlineSecurity',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# OnlineBackup
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = OnlineBackup, fill = OnlineBackup)) +
+  labs(
+    title = 'Distribuição de OnlineBackup',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# DeviceProtection
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = DeviceProtection, fill = DeviceProtection)) +
+  labs(
+    title = 'Distribuição de DeviceProtection',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# TechSupport
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = TechSupport, fill = TechSupport)) +
+  labs(
+    title = 'Distribuição de TechSupport',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# StreamingTV 
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = StreamingTV, fill = StreamingTV)) +
+  labs(
+    title = 'Distribuição de StreamingTV',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# StreamingMovies
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = StreamingMovies, fill = StreamingMovies)) +
+  labs(
+    title = 'Distribuição de StreamingMovies',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# Contract
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = Contract, fill = Contract)) +
+  labs(
+    title = 'Distribuição de Contract',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# PaperlessBilling
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = PaperlessBilling, fill = PaperlessBilling)) +
+  labs(
+    title = 'Distribuição de PaperlessBilling',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# PaymentMethod
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = PaymentMethod, fill = PaymentMethod)) +
+  labs(
+    title = 'Distribuição de PaymentMethod',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# MonthlyCharges
+df %>% 
+  ggplot() +
+  geom_histogram(aes(x = MonthlyCharges), col = 'Black', fill = 'lightblue') +
+  labs(
+    title = 'Distribuição de MonthlyCharges',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+
+# TotalCharges
+df %>% 
+  na.omit() %>% 
+  ggplot() +
+  geom_histogram(aes(x = TotalCharges), col = 'Black', fill = 'lightblue') +
+  labs(
+    title = 'Distribuição de TotalCharges',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw()
+```
+
+
+Agora vamos analisar a distribuição das covariáveis cruzadas com a nossa variável de interesse. Para isso, vamos utilizar o comando *facet_wrap* na geração das visualizações.
+
+```{r}
+# Gênero vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = gender, fill = gender)) +
+  labs(
+    title = 'Distribuição de Gênero',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# SeniorCitizen vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = SeniorCitizen, fill = SeniorCitizen)) +
+  labs(
+    title = 'Distribuição de SeniorCitizen',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# Partner vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = Partner, fill = Partner)) +
+  labs(
+    title = 'Distribuição de Partner',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# Dependents vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = Dependents, fill = Dependents)) +
+  labs(
+    title = 'Distribuição de Dependents',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# tenure vs Churn
+df %>% 
+  ggplot() +
+  geom_histogram(aes(x = tenure), col = 'black', fill = 'lightblue') +
+  labs(
+    title = 'Distribuição de tenure vs Churn',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# PhoneService vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = PhoneService, fill = PhoneService)) +
+  labs(
+    title = 'Distribuição de PhoneService',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# MultipleLines vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = MultipleLines, fill = MultipleLines)) +
+  labs(
+    title = 'Distribuição de MultipleLines',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# InternetService vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = InternetService, fill = InternetService)) +
+  labs(
+    title = 'Distribuição de InternetService',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# OnlineSecurity vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = OnlineSecurity, fill = OnlineSecurity)) +
+  labs(
+    title = 'Distribuição de OnlineSecurity',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# OnlineBackup vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = OnlineBackup, fill = OnlineBackup)) +
+  labs(
+    title = 'Distribuição de OnlineBackup',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# DeviceProtection vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = DeviceProtection, fill = DeviceProtection)) +
+  labs(
+    title = 'Distribuição de DeviceProtection',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# TechSupport vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = TechSupport, fill = TechSupport)) +
+  labs(
+    title = 'Distribuição de TechSupport',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# StreamingTV vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = StreamingTV, fill = StreamingTV)) +
+  labs(
+    title = 'Distribuição de StreamingTV',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# StreamingMovies vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = StreamingMovies, fill = StreamingMovies)) +
+  labs(
+    title = 'Distribuição de StreamingMovies',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# Contract vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = Contract, fill = Contract)) +
+  labs(
+    title = 'Distribuição de Contract',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# PaperlessBilling vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = PaperlessBilling, fill = PaperlessBilling)) +
+  labs(
+    title = 'Distribuição de PaperlessBilling',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# PaymentMethod vs Churn
+df %>% 
+  ggplot() +
+  geom_bar(aes(x = PaymentMethod, fill = PaymentMethod)) +
+  labs(
+    title = 'Distribuição de PaymentMethod',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  facet_wrap(~Churn)
+
+# MonthlyCharges vs Churn
+df %>% 
+  ggplot() +
+  geom_histogram(aes(x = MonthlyCharges), col = 'Black', fill = 'lightblue') +
+  labs(
+    title = 'Distribuição de MonthlyCharges',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+
+# TotalCharges vs Churn
+df %>% 
+  ggplot() +
+  geom_histogram(aes(x = TotalCharges), col = 'Black', fill = 'lightblue') +
+  labs(
+    title = 'Distribuição de TotalCharges',
+    x = NULL,
+    y = 'Frequência'
+  ) +
+  theme_bw() +
+  facet_wrap(~Churn)
+```
+
+## Preparando os dados para modelagem
+
+Nesse primeiro momento, vamos ajustar o modelo sem tratar a base de dados. Vamos a apenas excluir variáveis irrelevantes e também os valores faltantes.
+
+```{r}
+df_sem_trat <- df %>% 
+  # Removendo a variável de identificação
+  select(-customerID) %>%
+  # Removendo as linhas com NAs
+  na.omit()
+```
+
+
+### Treino e teste
+Para podermos mensurar a qualidade dos modelos vamos utilizar apenas os dados de treinamento e separa-lo em conjunto de treino e teste. A divisão será feita com utilização do pacote "caret", que possibilita realizar a divisão de forma proporcional segundo alguma variável.
+
+```{r}
+# Verificando a proporção de categorias
+df_sem_trat$Churn %>% 
+  table() %>% 
+  prop.table()
+
+# semente para reprodutibilidade 
+set.seed(20200710)
+
+# Separando o conjunto de treino e teste
+indices <- createDataPartition(df_sem_trat$Churn, 
+                               times = 1, p = 0.8, list = FALSE)
+
+df_treino <- df_sem_trat[indices, ]
+df_teste <- df_sem_trat[-indices, ] 
+
+# Verificando a proporção de categorias após a divisão do conjunto de dados
+
+df_treino$Churn %>% 
+  table() %>% 
+  prop.table()
+
+df_teste$Churn %>% 
+  table() %>% 
+  prop.table()
+```
+
+### Modelagem 
+
+Como se trata de um problema de classificação, vamos ajustar um modelo de regressão logística e verificar a performance.
+
+```{r}
+tempo_inicio <- Sys.time()
+
+modelo_RL <- train(Churn  ~ .,
+                   data = df_treino,
+                   method = "glm",
+                   family = "binomial")
+
+tempo_final <- Sys.time() - tempo_inicio
+tempo_final
+
+modelo_RL
+```
+
+```{r}
+tempo_inicio <- Sys.time()
+
+modelo_rf <- train(Churn ~ .,
+                   data = df_treino,
+                   method = "rpart",
+                   tuneLength = 7)
+
+tempo_final <- Sys.time() - tempo_inicio
+tempo_final
+
+modelo_rf
+
+```
+
+### Desempenho do modelo
+
+Aplicando aos dados de teste
+
+```{r}
+pred <- predict(modelo_RL, df_teste, type = 'raw')
+table(df_teste$Churn, pred)
+```
+
+```{r}
+pred <- predict(modelo_rf, df_teste, type = 'raw')
+table(df_teste$Churn, pred)
+
+```
