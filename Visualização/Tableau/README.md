@@ -1,6 +1,6 @@
 # Visualização de dados com tableau
 
-Durante o desenvolvimento desse projeto criei um dashboard em tableau e você pode acessar e navegar com mais detalhe em meu <a href = "https://public.tableau.com/profile/rodrigo.tributino.gon.alves#!/">tableau public</a>.
+Durante o desenvolvimento desse projeto criei um dashboard em tableau e você pode acessá-lo em meu <a href = "https://public.tableau.com/profile/rodrigo.tributino.gon.alves#!/">tableau public</a>.
 
 A base de dados utilizada para criar a visualiação pode ser encontrada no <a href = "https://www.kaggle.com/blastchar/telco-customer-churn"> Kaggle - Telco Customer Churn</a>.
 
